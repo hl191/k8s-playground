@@ -11,7 +11,7 @@ spec:
     spec:
       containers:
         - name: hazelcast
-          image: hazelcast/management-center:3.12.9
+          image: hazelcast/management-center:3.10.4
 
 ---
 
@@ -22,8 +22,7 @@ metadata:
 spec:
   type: LoadBalancer
   selector:
-    app: management-center
+    app: hazelcast-management-center
   ports:
     - protocol: TCP
-      port: 8888
-      targetPort: 8080
+      port: 8080

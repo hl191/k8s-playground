@@ -9,7 +9,6 @@ spec:
   selector:
     matchLabels:
       app: goods-service
-  strategy: {}
   template:
     metadata:
       labels:

@@ -1,18 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  creationTimestamp: null
   labels:
     app: goods-service
   name: goods-service
 spec:
+  type: LoadBalancer
   ports:
-    - name: 8080-8080
-      port: 8080
+    - port: 8040
       protocol: TCP
-      targetPort: 8080
   selector:
     app: goods-service
-  type: ClusterIP
-status:
-  loadBalancer: {}

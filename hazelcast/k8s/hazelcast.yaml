@@ -1,0 +1,107 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: default-cluster
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: default
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hazelcast-configuration
+data:
+  hazelcast.xml: |-
+    <?xml version="1.0" encoding="UTF-8"?>
+    <hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.10.xsd"
+                   xmlns="http://www.hazelcast.com/schema/config"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      <properties>
+        <property name="hazelcast.discovery.enabled">true</property>
+      </properties>
+      <network>
+        <join>
+          <multicast enabled="false"/>
+          <tcp-ip enabled="false" />
+          <discovery-strategies>
+            <discovery-strategy enabled="true" class="com.hazelcast.kubernetes.HazelcastKubernetesDiscoveryStrategy">
+            </discovery-strategy>
+          </discovery-strategies>
+        </join>
+      </network>
+    </hazelcast>
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: hazelcast
+  labels:
+    app: hazelcast
+spec:
+  replicas: 3
+  serviceName: hazelcast-service
+  selector:
+    matchLabels:
+      app: hazelcast
+  template:
+    metadata:
+      labels:
+        app: hazelcast
+    spec:
+      containers:
+        - name: hazelcast
+          image: hazelcast/hazelcast:3.10.3
+          ports:
+            - name: hazelcast
+              containerPort: 5701
+          livenessProbe:
+            httpGet:
+              path: /hazelcast/health/node-state
+              port: 5701
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /hazelcast/health/node-state
+              port: 5701
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 1
+          volumeMounts:
+            - name: hazelcast-storage
+              mountPath: /data/hazelcast
+          env:
+            - name: JAVA_OPTS
+              value: "-Dhazelcast.rest.enabled=true -Dhazelcast.config=/data/hazelcast/hazelcast.xml"
+      volumes:
+        - name: hazelcast-storage
+          configMap:
+            name: hazelcast-configuration
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: hazelcast-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: hazelcast
+  ports:
+    - protocol: TCP
+      port: 5701
