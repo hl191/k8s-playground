@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: goods-service
+  name: goods-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: goods-service
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: goods-service
+    spec:
+      containers:
+      - image: me/goods-service:v1.0
+        name: goods-service

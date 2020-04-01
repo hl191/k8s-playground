@@ -1,0 +1,29 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: hazelcast-management-center
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: hazelcast-management-center
+    spec:
+      containers:
+        - name: hazelcast
+          image: hazelcast/management-center:3.12.9
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: hazelcast-management-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: management-center
+  ports:
+    - protocol: TCP
+      port: 8888
+      targetPort: 8080
