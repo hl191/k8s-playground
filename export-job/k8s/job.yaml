@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: export-job-
+spec:
+  ttlSecondsAfterFinished: 120 # Automatically clean up completed jobs after 2 minutes
+  parallelism: 1
+  completions: 1
+  activeDeadlineSeconds: 1800
+  backoffLimit: 3
+  template:
+    metadata:
+      name: export-job
+    spec:
+      containers:
+        - name: export-job
+          image: me/export-job:v1.0
+          command: ["java","-jar","export-job.jar", "fakeArgument"]
+      restartPolicy: OnFailure
